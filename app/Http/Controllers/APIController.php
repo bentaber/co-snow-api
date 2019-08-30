@@ -47,14 +47,22 @@ class APIController extends BaseController
         $cacheKey = join('_', [$stationId,$startDate,$count]);
 
         $measurements = Cache::rememberForever($cacheKey, function() use ($startDate, $endDate, $stationId) {
+            $queryParams = [$startDate, $endDate];
+            $where = '';
+
+            if(ALL_STATIONS != $stationId) {
+              array_push($queryParams, $stationId);
+              $where = ' and station_id = ?';
+            }
+
             $query = sprintf('
                 select measurement_date, station_id, snow_depth
                 from snotel_measurements where measurement_date between ? and ?
                 %s
                 order by measurement_date asc;
-            ', (ALL_STATIONS != $stationId) ? ' and station_id = ?' : '');
+            ', $where);
 
-            $data = DB::select($query, [$startDate, $endDate, $stationId]);
+            $data = DB::select($query, $queryParams);
             $json = [];
 
             // flip to json structure { 'stationid': [{ date: date, val: val }] }
