@@ -33,7 +33,7 @@ class APIController extends BaseController
         from snotel_measurements as sm
         inner join snotel_sites as ss on sm.station_id = ss.station_id
         where measurement_date = ?
-        order by station_id asc;
+        order by ss.station_name asc;
       ';
 
       $data = DB::select($query, [$date]);
