@@ -29,11 +29,11 @@ class APIController extends BaseController
 
     $geoJSON = Cache::rememberForever($cacheKey, function() use ($date) {
       $query = '
-        select sm.station_id, sm.snow_depth, ss.station_name, ss.county_name, ss.latitude, ss.longitude
+        select sm.station_id, sm.snow_depth, ss.station_name, ss.county, ss.latitude, ss.longitude, ss.elevation
         from snotel_measurements as sm
         inner join snotel_sites as ss on sm.station_id = ss.station_id
         where measurement_date = ?
-        order by ss.station_name asc;
+        order by ss.elevation desc;
       ';
 
       $data = DB::select($query, [$date]);
@@ -70,8 +70,9 @@ class APIController extends BaseController
           'properties' => (object)[
             'stationId' => $row->station_id,
             'name' => $row->station_name,
-            'county' => $row->county_name,
-            'snow' => $row->snow_depth
+            'county' => $row->county,
+            'snow' => $row->snow_depth,
+            'elevation' => $row->elevation
           ]
         ]);
       }
