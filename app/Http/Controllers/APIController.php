@@ -8,91 +8,23 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
-const DATA_BEGIN_DATE = '2018/10/01';
-const DATE_FORMAT = 'Y-m-d';
-const ALL_STATIONS = 'all';
-const API_HEADERS = [
-  'Access-Control-Allow-Origin' => '*',
-  'Cache-Control' => 'public, max-age=31536000',
-  'X-Powered-By' => 'The Weatherman'
-];
-
 class APIController extends BaseController
 {
-  public function sites()
-  {
-    $sites = Cache::rememberForever('sites', function () {
-      return DB::table('snotel_sites')->get();
-    });
-
-    return response()->json($sites, 200, API_HEADERS);
-  }
-
-  public function measurements($stationId, $startDate, $count)
-  {
-    // parameter validation
-    $stationId = $stationId ?? ALL_STATIONS;
-    $count = (!$count || !is_numeric($count)) ? 10 : $count;
-    $startDate = date_create_from_format(DATE_FORMAT, $startDate);
-
-    if (!$startDate) {
-        $startDate = date_create(DATA_BEGIN_DATE);
-    }
-
-    $startDate = $startDate->format(DATE_FORMAT);
-    $endDate = date_create($startDate)
-    ->add(date_interval_create_from_date_string($count.' days'))
-    ->format(DATE_FORMAT);
-
-    // max out at 10 rows at a time if we're pulling all snotel stations
-    if (ALL_STATIONS == $stationId && $count > 10) {
-        $count = 10;
-    }
-
-    $cacheKey = join('_', [$stationId,$startDate,$count]);
-
-    $measurements = Cache::rememberForever($cacheKey, function() use ($startDate, $endDate, $stationId) {
-      $queryParams = [$startDate, $endDate];
-      $where = '';
-
-      if(ALL_STATIONS != $stationId) {
-        array_push($queryParams, $stationId);
-        $where = ' and station_id = ?';
-      }
-
-      $query = sprintf('
-        select measurement_date, station_id, snow_depth
-        from snotel_measurements where measurement_date between ? and ?
-        %s
-        order by measurement_date asc;
-      ', $where);
-
-      $data = DB::select($query, $queryParams);
-      $json = [];
-
-      // flip to json structure { 'stationid': [{ date: date, val: val }] }
-      foreach ($data as $row) {
-        $json[$row->station_id] = $json[$row->station_id] ?? [];
-
-        array_push($json[$row->station_id], [
-          'date' => $row->measurement_date,
-          'val' => $row->snow_depth
-        ]);
-      }
-
-      return (object)$json;
-    });
-
-    return response()->json($measurements, 200, API_HEADERS);
-  }
+  const DATE_FORMAT = 'Y-m-d';
+  const API_HEADERS = [
+    'Access-Control-Allow-Origin' => '*',
+    'Cache-Control' => 'public, max-age=31536000',
+    'X-Powered-By' => 'The Weatherman'
+  ];
 
   public function geoJSON($date) {
-    $date = date_create_from_format(DATE_FORMAT, $date)->format(DATE_FORMAT);
+    $date = date_create_from_format(self::DATE_FORMAT, $date);
 
     if (!$date) {
       return response()->json("", 403);
     }
 
+    $date = $date->format(self::DATE_FORMAT);
     $cacheKey = "geoJSON_".$date;
 
     $geoJSON = Cache::rememberForever($cacheKey, function() use ($date) {
@@ -147,6 +79,6 @@ class APIController extends BaseController
       return (object)$json;
     });
 
-    return response()->json($geoJSON, 200, API_HEADERS);
+    return response()->json($geoJSON, 200, self::API_HEADERS);
   }
 }
