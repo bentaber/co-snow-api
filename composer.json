@@ -1,12 +1,7 @@
 {
-    "name": "laravel/lumen",
-    "description": "The Laravel Lumen Framework.",
-    "keywords": [
-        "framework",
-        "laravel",
-        "lumen"
-    ],
-    "license": "MIT",
+    "name": "co-snow-api",
+    "description": "SNOTEL data for Colorado sites",
+    "license": "UNLICENSED",
     "type": "project",
     "require": {
         "php": ">=7.1.3",
