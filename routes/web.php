@@ -1,3 +1,3 @@
 <?php
 
-$router->get('/api/geoJSON/{date}', 'APIController@geoJSON');
+$router->get('/api/geoJSON/{date}/', 'APIController@geoJSON');
