@@ -11,11 +11,15 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 class APIController extends BaseController
 {
   const DATE_FORMAT = 'Y-m-d';
-  const API_HEADERS = [
-    'Access-Control-Allow-Origin' => '*',
-    'Cache-Control' => 'public, max-age=31536000',
-    'X-Powered-By' => 'The Weatherman'
-  ];
+  private $apiHeaders;
+
+  function __construct() {
+    $this->apiHeaders = [
+      'Access-Control-Allow-Origin' => env('CORS_ALLOWED_DOMAINS', '*'),
+      'Cache-Control' => 'public, max-age=31536000',
+      'X-Powered-By' => 'The Weatherman'
+    ];
+  }
 
   public function geoJSON($date) {
     $date = date_create_from_format(self::DATE_FORMAT, $date);
@@ -80,6 +84,6 @@ class APIController extends BaseController
       return (object)$json;
     });
 
-    return response()->json($geoJSON, 200, self::API_HEADERS);
+    return response()->json($geoJSON, 200, $this->apiHeaders);
   }
 }
